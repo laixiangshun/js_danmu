@@ -107,6 +107,7 @@
         }
         //弹幕移动
         function move(obj){
+            //此处注意：timer1不能定义到外面，不然会后面的覆盖前面的导致 danmu.removeChild(obj);找不到obj
            var timer1=setInterval(function(){
                var divchild=$("#danmu .newli");
                if(divchild!=null && divchild.length>0){
@@ -128,6 +129,7 @@
             insert();
         },1000);
         window.onfocus=function(){
+            $("#close").show();
             clearInterval(timer2);
             timer2=setInterval(function () {
                 insert();
