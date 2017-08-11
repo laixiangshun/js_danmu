@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="en">
+<head lang="en">
+    <meta charset="UTF-8">
+    <title>仿弹幕效果</title>
+    <style type="text/css">
+        *{
+            margin: 0;
+            padding: 0;
+            list-style: none;
+        }
+        html,body{
+            width: 100%;
+            height: 100%;
+        }
+        #danmu{
+            position: relative;
+            height: 100%;
+            width: 100%;
+            overflow: hidden;
+            font-size: 30px;
+            background-color: #0A0C14;
+        }
+        #danmu .newli{
+            background-color: #0A0C14;
+            height: 50px;
+            line-height:50px;
+            position: absolute;
+            overflow: hidden;
+        }
+        .input{
+            height: 50px;
+            width: 550px;
+            bottom: 30px;
+           /* left: 500px;*/
+            display: block;
+            overflow: hidden;
+            position: fixed;
+            line-height: 50px;
+            background-color: azure;
+            opacity: 0.7;
+            border-radius: 1%;
+        }
+        #content{
+            height: 30px;
+            width: 300px;
+            border-radius: 1.5px;
+        }
+        .btn{
+            width: auto;
+            border-radius: 5px;
+            color: #B01DFF;
+            font-size: 18px;
+            font-weight: 800;
+            display: inline-block;
+            line-height: 30px;
+            border: 2px solid rgb(221,221,221);
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+    <div id="danmu"></div>
+    <div class="input" id="input">
+        <span>请输入内容:</span><input type="text" id="content" placeholder="请发言" maxlength="20">
+        <input type="button" class="btn" id="send" value="发送" onclick="send();">
+        <input type="button" class="btn" id="close" value="关闭弹幕" onclick="close_danmu(this);">
+        <input type="button" class="btn" id="open" style="display: none" value="开启弹幕" onclick="open_danmu(this);">
+    </div>
+    <script type="text/javascript" src="jquery-1.8.0.min.js"></script>
+    <script type="text/javascript">
+        var danmu=document.getElementById("danmu");
+        var winH=danmu.clientHeight;
+        var speak=['哇塞好牛逼啊','好帅啊','前方高能','hahahahaha','哈哈哈哈','风流倜傥','我爱你阿啊啊啊','哈哈哈'];
+        //var speak=[];
+        var num=null;//控制不循环出现
+        var timer2=null;
+        //弹幕插入到屏幕中
+        function insert(str){
+            console.log(speak);
+            if(speak!=null && speak.length>0 ){
+                num++;
+                console.log(num);//弹幕出现次数
+                var len=speak.length;
+                var newli=document.createElement("div");
+                var randoms=Math.floor(Math.random()*len);
+                var r=Math.floor(Math.random()*256);
+                var g=Math.floor(Math.random()*256);
+                var b=Math.floor(Math.random()*256);
+                if(str!=null && str!=""){
+                    newli.innerHTML=str;
+                }else{
+                    newli.innerHTML=speak[randoms];
+                }
+                newli.className="newli";
+                newli.style.color='rgb('+r+','+g+','+b+')';
+                var t=winH-50;
+                var newliH=Math.floor(Math.random()*(t-1));
+                var newliW=danmu.clientWidth;
+                newli.style.top=newliH+"px";
+                newli.style.left=newliW+"px";
+                danmu.appendChild(newli);
+                move(newli);
+            }else{
+                clearInterval(timer2);
+            }
+        }
+        //弹幕移动
+        function move(obj){
+           var timer1=setInterval(function(){
+               var divchild=$("#danmu .newli");
+               if(divchild!=null && divchild.length>0){
+                   var winW=obj.clientWidth;
+                   console.log("obj.clientWidth:"+winW);
+                   var run=obj.offsetLeft;
+                   run--;
+                   if(run<=-winW){
+                       danmu.removeChild(obj);
+                       clearInterval(timer1);
+                   }
+                   obj.style.left=run+"px";
+               }else{
+                   clearInterval(timer1);
+               }
+            },1);
+        }
+        timer2=setInterval(function(){
+            insert();
+        },1000);
+        window.onfocus=function(){
+            clearInterval(timer2);
+            timer2=setInterval(function () {
+                insert();
+            },1000);
+        };
+        window.onblur=function(){
+            clearInterval(timer2);
+        };
+        function content_position(){
+            var content=document.getElementById("input");
+            var wid=parseInt(getStyle(content,'width'));
+            var winW=(document.body.clientWidth - wid)/2;
+            content.style.left=winW+"px";
+        }
+        content_position();
+
+        function getStyle(obj,attr){
+            if(obj.currentStyle){//IE
+                return obj.currentStyle[attr];
+            }else{//feiIE
+                return getComputedStyle(obj,false)[attr];
+            }
+        }
+        var input=document.getElementById("content");
+        function send(){
+            var val=input.value;
+            if(val!="" && val!=null){
+                speak.push(val);
+                insert(val);
+            }else{
+                alert("输入不能为空");
+            }
+        }
+       input.onfocus=function(){
+           input.value="";
+       };
+        //enter键兼容性写法
+        input.onkeyup=function(e){
+            var e=e|| window.event|| arguments.callee.caller.arguments[0];
+            var code= e.keyCode || e.which || e.charCode;
+            if(code =="13"){
+                send();
+            }
+        };
+        //关闭弹幕
+        function close_danmu(target){
+            //$(target).val("开启弹幕");
+            //$(target).attr("disabled","true");
+           // $(target).css("cursor","auto");
+            $(target).css("display","none");
+            $("#open").show();
+            var len=speak.length;
+            var str="已成功防御，"+len+"条弹幕";
+            var div=$("#danmu .newli");
+            if(div!=null && div.length>0){
+                for(var i=0;i<div.length;i++){
+                    // danmu.removeChild(div[i]);
+                    $(div[i]).css('display',"none");
+                    //$(div[i]).attr('disabled',true);
+                }
+            }
+            //clearInterval(timer1);
+            clearInterval(timer2);
+            insert(str);
+        }
+        //开启弹幕
+        function open_danmu(target){
+            $(target).css("display","none");
+            $("#close").show();
+            var div=$("#danmu .newli");
+            if(div!=null && div.length>0){
+                for(var i=0;i<div.length;i++){
+                    // danmu.removeChild(div[i]);
+                    $(div[i]).css('display',"none");
+                }
+            }
+            timer2=setInterval(function () {
+                insert();
+            },1000);
+        }
+    </script>
+</body>
+</html>
